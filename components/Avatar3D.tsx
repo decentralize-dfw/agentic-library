@@ -35,6 +35,57 @@ const BONE_MAP: Record<string, VRMHumanBoneName> = {
   rightHand: VRMHumanBoneName.RightHand,
 };
 
+// Fallback bone name patterns for different VRM tools and GLB files
+const BONE_NAME_PATTERNS: Record<string, string[]> = {
+  head: ['Head', 'head', 'J_Bip_C_Head', 'mixamorig:Head', 'Bip001_Head', 'DEF-head', 'Bone_Head'],
+  neck: ['Neck', 'neck', 'J_Bip_C_Neck', 'mixamorig:Neck', 'Bip001_Neck', 'DEF-neck', 'Bone_Neck'],
+  chest: ['Chest', 'chest', 'J_Bip_C_Chest', 'J_Bip_C_UpperChest', 'mixamorig:Spine2', 'Bip001_Spine2', 'DEF-chest', 'UpperChest'],
+  spine: ['Spine', 'spine', 'J_Bip_C_Spine', 'mixamorig:Spine', 'mixamorig:Spine1', 'Bip001_Spine', 'DEF-spine'],
+  hips: ['Hips', 'hips', 'J_Bip_C_Hips', 'mixamorig:Hips', 'Bip001_Pelvis', 'DEF-hips', 'Root'],
+  leftUpperArm: ['LeftUpperArm', 'Left_UpperArm', 'J_Bip_L_UpperArm', 'mixamorig:LeftArm', 'Bip001_L_UpperArm', 'DEF-upper_arm.L', 'Arm.L', 'L_Arm'],
+  leftLowerArm: ['LeftLowerArm', 'Left_LowerArm', 'J_Bip_L_LowerArm', 'mixamorig:LeftForeArm', 'Bip001_L_Forearm', 'DEF-forearm.L', 'ForeArm.L', 'L_ForeArm'],
+  rightUpperArm: ['RightUpperArm', 'Right_UpperArm', 'J_Bip_R_UpperArm', 'mixamorig:RightArm', 'Bip001_R_UpperArm', 'DEF-upper_arm.R', 'Arm.R', 'R_Arm'],
+  rightLowerArm: ['RightLowerArm', 'Right_LowerArm', 'J_Bip_R_LowerArm', 'mixamorig:RightForeArm', 'Bip001_R_Forearm', 'DEF-forearm.R', 'ForeArm.R', 'R_ForeArm'],
+  leftHand: ['LeftHand', 'Left_Hand', 'J_Bip_L_Hand', 'mixamorig:LeftHand', 'Bip001_L_Hand', 'DEF-hand.L', 'Hand.L'],
+  rightHand: ['RightHand', 'Right_Hand', 'J_Bip_R_Hand', 'mixamorig:RightHand', 'Bip001_R_Hand', 'DEF-hand.R', 'Hand.R'],
+};
+
+// Find bone by traversing scene tree with name patterns
+function findBoneByName(scene: THREE.Object3D, boneKey: string): THREE.Bone | null {
+  const patterns = BONE_NAME_PATTERNS[boneKey] || [];
+  let foundBone: THREE.Bone | null = null;
+
+  scene.traverse((child) => {
+    if (foundBone) return;
+    if (child instanceof THREE.Bone || child.type === 'Bone') {
+      const name = child.name.toLowerCase();
+      for (const pattern of patterns) {
+        if (child.name === pattern || name === pattern.toLowerCase() || name.includes(pattern.toLowerCase())) {
+          foundBone = child as THREE.Bone;
+          return;
+        }
+      }
+    }
+  });
+
+  return foundBone;
+}
+
+// Build bone cache from scene
+function buildBoneCache(scene: THREE.Object3D): Map<string, THREE.Bone> {
+  const cache = new Map<string, THREE.Bone>();
+
+  for (const boneKey of Object.keys(BONE_NAME_PATTERNS)) {
+    const bone = findBoneByName(scene, boneKey);
+    if (bone) {
+      cache.set(boneKey, bone);
+    }
+  }
+
+  console.log('[Avatar3D] Bone cache built:', Array.from(cache.keys()));
+  return cache;
+}
+
 // 50+ Emote animations with detailed body poses
 const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === IDLE STATES ===
@@ -826,84 +877,132 @@ const VRMAvatarModel = ({
 }) => {
   const [vrm, setVrm] = useState<VRM | null>(null);
   const [gltf, setGltf] = useState<any>(null);
+  const [boneCache, setBoneCache] = useState<Map<string, THREE.Bone>>(new Map());
+  const [useVrmHumanoid, setUseVrmHumanoid] = useState(false);
   const loadedRef = useRef(false);
   const idleTimerRef = useRef<number>(0);
   const currentIdleRef = useRef<EmoteType>(EmoteType.IDLE);
+  const sceneRef = useRef<THREE.Object3D | null>(null);
 
   // Load VRM
   useEffect(() => {
     const loader = new GLTFLoader();
     loader.register((parser) => new VRMLoaderPlugin(parser));
 
+    console.log('[Avatar3D] Loading model:', url);
+
     loader.load(
       url,
       (loadedGltf) => {
         const loadedVrm = loadedGltf.userData.vrm as VRM | undefined;
+        let scene: THREE.Object3D;
 
         if (loadedVrm) {
-          // It's a VRM file
-          loadedVrm.scene.rotation.y = Math.PI; // Face camera
+          console.log('[Avatar3D] VRM detected');
+          scene = loadedVrm.scene;
+          scene.rotation.y = Math.PI;
           setVrm(loadedVrm);
           setGltf(loadedGltf);
+          sceneRef.current = scene;
 
-          // Calculate bounding box
-          const box = new THREE.Box3().setFromObject(loadedVrm.scene);
-          setBoundingBox(box);
+          // Check if VRM humanoid is available
+          if (loadedVrm.humanoid) {
+            console.log('[Avatar3D] VRM humanoid available');
 
-          // Apply initial pose immediately
-          applyPoseToVRM(loadedVrm, EMOTE_LIBRARY[EmoteType.IDLE]);
+            // Test if we can actually get bones from humanoid
+            const testBone = loadedVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.Head);
+            if (testBone) {
+              console.log('[Avatar3D] Using VRM humanoid API');
+              setUseVrmHumanoid(true);
+            } else {
+              console.log('[Avatar3D] VRM humanoid API returned null, using fallback');
+              setUseVrmHumanoid(false);
+            }
+          } else {
+            console.log('[Avatar3D] No VRM humanoid, using fallback bone search');
+            setUseVrmHumanoid(false);
+          }
         } else {
-          // It's a regular GLB file
-          loadedGltf.scene.rotation.y = Math.PI;
+          console.log('[Avatar3D] GLB file detected (not VRM)');
+          scene = loadedGltf.scene;
+          scene.rotation.y = Math.PI;
           setGltf(loadedGltf);
-
-          const box = new THREE.Box3().setFromObject(loadedGltf.scene);
-          setBoundingBox(box);
+          sceneRef.current = scene;
+          setUseVrmHumanoid(false);
         }
 
+        // Build bone cache from scene for fallback
+        const cache = buildBoneCache(scene);
+        setBoneCache(cache);
+
+        // Log all bones in the scene for debugging
+        console.log('[Avatar3D] All bones in scene:');
+        scene.traverse((child) => {
+          if (child instanceof THREE.Bone || child.type === 'Bone') {
+            console.log('  -', child.name);
+          }
+        });
+
+        // Calculate bounding box
+        const box = new THREE.Box3().setFromObject(scene);
+        setBoundingBox(box);
+
+        // Apply initial pose
         if (!loadedRef.current) {
           loadedRef.current = true;
           onLoaded?.();
         }
       },
-      undefined,
+      (progress) => {
+        if (progress.total > 0) {
+          console.log('[Avatar3D] Loading progress:', Math.round((progress.loaded / progress.total) * 100) + '%');
+        }
+      },
       (error) => {
-        console.error('Error loading model:', error);
+        console.error('[Avatar3D] Error loading model:', error);
       }
     );
 
     return () => {
-      if (vrm) {
-        // Cleanup
-      }
+      // Cleanup
+      setVrm(null);
+      setGltf(null);
+      setBoneCache(new Map());
     };
   }, [url]);
 
-  // Apply pose to VRM
-  const applyPoseToVRM = (vrmInstance: VRM, pose: PoseDefinition) => {
-    if (!vrmInstance.humanoid) return;
-
-    Object.entries(pose.bones).forEach(([boneKey, rotation]) => {
+  // Get bone - try VRM humanoid first, then fallback to cache
+  const getBone = useCallback((boneKey: string): THREE.Object3D | null => {
+    // Try VRM humanoid first
+    if (useVrmHumanoid && vrm?.humanoid) {
       const vrmBoneName = BONE_MAP[boneKey];
-      if (!vrmBoneName) return;
-
-      const bone = vrmInstance.humanoid?.getNormalizedBoneNode(vrmBoneName);
-      if (bone) {
-        bone.rotation.x = d2r(rotation.x);
-        bone.rotation.y = d2r(rotation.y);
-        bone.rotation.z = d2r(rotation.z);
+      if (vrmBoneName) {
+        const bone = vrm.humanoid.getNormalizedBoneNode(vrmBoneName);
+        if (bone) return bone;
       }
-    });
-  };
+    }
+
+    // Fallback to bone cache
+    const cachedBone = boneCache.get(boneKey);
+    if (cachedBone) return cachedBone;
+
+    return null;
+  }, [vrm, useVrmHumanoid, boneCache]);
 
   // Animation frame
   useFrame((state, delta) => {
-    if (!vrm?.humanoid) return;
+    const scene = sceneRef.current;
+    if (!scene && !vrm) return;
+
+    // If no bones found at all, skip animation
+    if (boneCache.size === 0 && !useVrmHumanoid) return;
 
     const time = state.clock.getElapsedTime();
 
-    // Update VRM
-    vrm.update(delta);
+    // Update VRM if available
+    if (vrm) {
+      vrm.update(delta);
+    }
 
     // Cycle through idle animations
     if (emote === EmoteType.IDLE || IDLE_EMOTES.includes(emote)) {
@@ -926,10 +1025,7 @@ const VRMAvatarModel = ({
 
     // Apply pose with smooth interpolation
     Object.entries(targetPose.bones).forEach(([boneKey, rotation]) => {
-      const vrmBoneName = BONE_MAP[boneKey];
-      if (!vrmBoneName) return;
-
-      const bone = vrm.humanoid?.getNormalizedBoneNode(vrmBoneName);
+      const bone = getBone(boneKey);
       if (!bone) return;
 
       // Breathing animation
