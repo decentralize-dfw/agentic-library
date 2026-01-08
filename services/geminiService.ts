@@ -218,7 +218,7 @@ export const generateCharacterResponse = async (
   history: { role: string; parts: { text: string }[] }[]
 ): Promise<string> => {
   try {
-    const modelId = 'gemini-1.5-flash';
+    const modelId = 'gemini-2.0-flash-exp';
 
     // Append strict instruction for brevity
     const optimizedSystemInstruction = `${systemInstruction} IMPORTANT: Be extremely concise. Maximum 2 sentences. Speak fast and casually.`;
