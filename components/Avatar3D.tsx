@@ -39,15 +39,20 @@ const BONE_MAP: Record<string, VRMHumanBoneName> = {
 const BONE_NAME_PATTERNS: Record<string, string[]> = {
   head: ['Head', 'head', 'J_Bip_C_Head', 'mixamorig:Head', 'Bip001_Head', 'DEF-head', 'Bone_Head'],
   neck: ['Neck', 'neck', 'J_Bip_C_Neck', 'mixamorig:Neck', 'Bip001_Neck', 'DEF-neck', 'Bone_Neck'],
-  chest: ['Chest', 'chest', 'J_Bip_C_Chest', 'J_Bip_C_UpperChest', 'mixamorig:Spine2', 'Bip001_Spine2', 'DEF-chest', 'UpperChest'],
+  chest: ['Chest', 'chest', 'Upper_Chest', 'UpperChest', 'J_Bip_C_Chest', 'J_Bip_C_UpperChest', 'mixamorig:Spine2', 'Bip001_Spine2', 'DEF-chest'],
   spine: ['Spine', 'spine', 'J_Bip_C_Spine', 'mixamorig:Spine', 'mixamorig:Spine1', 'Bip001_Spine', 'DEF-spine'],
   hips: ['Hips', 'hips', 'J_Bip_C_Hips', 'mixamorig:Hips', 'Bip001_Pelvis', 'DEF-hips', 'Root'],
-  leftUpperArm: ['LeftUpperArm', 'Left_UpperArm', 'J_Bip_L_UpperArm', 'mixamorig:LeftArm', 'Bip001_L_UpperArm', 'DEF-upper_arm.L', 'Arm.L', 'L_Arm'],
-  leftLowerArm: ['LeftLowerArm', 'Left_LowerArm', 'J_Bip_L_LowerArm', 'mixamorig:LeftForeArm', 'Bip001_L_Forearm', 'DEF-forearm.L', 'ForeArm.L', 'L_ForeArm'],
-  rightUpperArm: ['RightUpperArm', 'Right_UpperArm', 'J_Bip_R_UpperArm', 'mixamorig:RightArm', 'Bip001_R_UpperArm', 'DEF-upper_arm.R', 'Arm.R', 'R_Arm'],
-  rightLowerArm: ['RightLowerArm', 'Right_LowerArm', 'J_Bip_R_LowerArm', 'mixamorig:RightForeArm', 'Bip001_R_Forearm', 'DEF-forearm.R', 'ForeArm.R', 'R_ForeArm'],
-  leftHand: ['LeftHand', 'Left_Hand', 'J_Bip_L_Hand', 'mixamorig:LeftHand', 'Bip001_L_Hand', 'DEF-hand.L', 'Hand.L'],
-  rightHand: ['RightHand', 'Right_Hand', 'J_Bip_R_Hand', 'mixamorig:RightHand', 'Bip001_R_Hand', 'DEF-hand.R', 'Hand.R'],
+  // Left arm bones - added Left_arm, Left_elbow, Left_wrist patterns
+  leftUpperArm: ['Left_arm', 'LeftUpperArm', 'Left_UpperArm', 'J_Bip_L_UpperArm', 'mixamorig:LeftArm', 'Bip001_L_UpperArm', 'DEF-upper_arm.L', 'Arm.L', 'L_Arm', 'Left_shoulder'],
+  leftLowerArm: ['Left_elbow', 'LeftLowerArm', 'Left_LowerArm', 'J_Bip_L_LowerArm', 'mixamorig:LeftForeArm', 'Bip001_L_Forearm', 'DEF-forearm.L', 'ForeArm.L', 'L_ForeArm'],
+  leftHand: ['Left_wrist', 'LeftHand', 'Left_Hand', 'J_Bip_L_Hand', 'mixamorig:LeftHand', 'Bip001_L_Hand', 'DEF-hand.L', 'Hand.L'],
+  // Right arm bones - added Right_arm, Right_elbow, Right_wrist patterns
+  rightUpperArm: ['Right_arm', 'RightUpperArm', 'Right_UpperArm', 'J_Bip_R_UpperArm', 'mixamorig:RightArm', 'Bip001_R_UpperArm', 'DEF-upper_arm.R', 'Arm.R', 'R_Arm', 'Right_shoulder'],
+  rightLowerArm: ['Right_elbow', 'RightLowerArm', 'Right_LowerArm', 'J_Bip_R_LowerArm', 'mixamorig:RightForeArm', 'Bip001_R_Forearm', 'DEF-forearm.R', 'ForeArm.R', 'R_ForeArm'],
+  rightHand: ['Right_wrist', 'RightHand', 'Right_Hand', 'J_Bip_R_Hand', 'mixamorig:RightHand', 'Bip001_R_Hand', 'DEF-hand.R', 'Hand.R'],
+  // Shoulder bones for better arm control
+  leftShoulder: ['Left_shoulder', 'LeftShoulder', 'J_Bip_L_Shoulder', 'mixamorig:LeftShoulder', 'Bip001_L_Clavicle', 'DEF-shoulder.L'],
+  rightShoulder: ['Right_shoulder', 'RightShoulder', 'J_Bip_R_Shoulder', 'mixamorig:RightShoulder', 'Bip001_R_Clavicle', 'DEF-shoulder.R'],
 };
 
 // Find bone by traversing scene tree with name patterns
@@ -87,40 +92,45 @@ function buildBoneCache(scene: THREE.Object3D): Map<string, THREE.Bone> {
 }
 
 // 50+ Emote animations with detailed body poses
+// Note: VRM arms start in T-pose, positive Z on left arm = arm goes down, negative Z on right arm = arm goes down
 const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === IDLE STATES ===
   [EmoteType.IDLE]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
-      leftLowerArm: { x: 0, y: 0, z: -5 },
-      rightLowerArm: { x: 0, y: 0, z: 5 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 0, y: 0, z: 0 },
       chest: { x: 0, y: 0, z: 0 },
     }
   },
   [EmoteType.IDLE_RELAXED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 35 },
-      rightUpperArm: { x: 0, y: 0, z: -35 },
-      leftLowerArm: { x: -10, y: 0, z: -8 },
-      rightLowerArm: { x: -10, y: 0, z: 8 },
+      leftUpperArm: { x: 15, y: 0, z: 70 },
+      rightUpperArm: { x: 15, y: 0, z: -70 },
+      leftLowerArm: { x: 0, y: 35, z: 0 },
+      rightLowerArm: { x: 0, y: -35, z: 0 },
       head: { x: 5, y: 0, z: 0 },
       chest: { x: 3, y: 0, z: 0 },
     }
   },
   [EmoteType.IDLE_ATTENTIVE]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 18, y: 0, z: 60 },
+      rightUpperArm: { x: 18, y: 0, z: -60 },
+      leftLowerArm: { x: 0, y: 20, z: 0 },
+      rightLowerArm: { x: 0, y: -20, z: 0 },
       head: { x: -5, y: 0, z: 0 },
       chest: { x: -3, y: 0, z: 0 },
     }
   },
   [EmoteType.IDLE_CURIOUS]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 0, y: 10, z: 0 },
     }
   },
@@ -128,29 +138,29 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === SPEAKING STATES ===
   [EmoteType.TALKING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 25 },
-      rightUpperArm: { x: 0, y: 0, z: -25 },
-      leftLowerArm: { x: -25, y: 0, z: -5 },
-      rightLowerArm: { x: -25, y: 0, z: 5 },
+      leftUpperArm: { x: 25, y: 0, z: 55 },
+      rightUpperArm: { x: 25, y: 0, z: -55 },
+      leftLowerArm: { x: 0, y: 45, z: 0 },
+      rightLowerArm: { x: 0, y: -45, z: 0 },
       head: { x: 0, y: 0, z: 0 },
     }
   },
   [EmoteType.TALKING_EXCITED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 20 },
-      rightUpperArm: { x: 0, y: 0, z: -20 },
-      leftLowerArm: { x: -40, y: 0, z: -8 },
-      rightLowerArm: { x: -40, y: 0, z: 8 },
+      leftUpperArm: { x: 35, y: 0, z: 45 },
+      rightUpperArm: { x: 35, y: 0, z: -45 },
+      leftLowerArm: { x: 0, y: 60, z: 0 },
+      rightLowerArm: { x: 0, y: -60, z: 0 },
       head: { x: -10, y: 0, z: 0 },
       chest: { x: -5, y: 0, z: 0 },
     }
   },
   [EmoteType.TALKING_CALM]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 32 },
-      rightUpperArm: { x: 0, y: 0, z: -32 },
-      leftLowerArm: { x: -18, y: 0, z: -3 },
-      rightLowerArm: { x: -18, y: 0, z: 3 },
+      leftUpperArm: { x: 18, y: 0, z: 68 },
+      rightUpperArm: { x: 18, y: 0, z: -68 },
+      leftLowerArm: { x: 0, y: 30, z: 0 },
+      rightLowerArm: { x: 0, y: -30, z: 0 },
       head: { x: 5, y: 0, z: 0 },
     }
   },
@@ -158,162 +168,193 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === POSITIVE EMOTIONS ===
   [EmoteType.HAPPY]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 25 },
-      rightUpperArm: { x: 0, y: 0, z: -25 },
+      leftUpperArm: { x: 25, y: 0, z: 55 },
+      rightUpperArm: { x: 25, y: 0, z: -55 },
+      leftLowerArm: { x: 0, y: 35, z: 0 },
+      rightLowerArm: { x: 0, y: -35, z: 0 },
       head: { x: -8, y: 5, z: 0 },
       chest: { x: -5, y: 0, z: 0 },
     }
   },
   [EmoteType.HAPPY_GREETING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: -90, y: 0, z: -60 },
-      rightLowerArm: { x: -20, y: 0, z: 0 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 80, y: 0, z: -20 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -90, z: 0 },
       head: { x: -5, y: 10, z: -5 },
     }
   },
   [EmoteType.JOYFUL]: {
     bones: {
-      leftUpperArm: { x: -30, y: 0, z: 45 },
-      rightUpperArm: { x: -30, y: 0, z: -45 },
+      leftUpperArm: { x: 40, y: 0, z: 40 },
+      rightUpperArm: { x: 40, y: 0, z: -40 },
+      leftLowerArm: { x: 0, y: 50, z: 0 },
+      rightLowerArm: { x: 0, y: -50, z: 0 },
       head: { x: -15, y: 0, z: 0 },
       chest: { x: -10, y: 0, z: 0 },
     }
   },
   [EmoteType.EXCITED]: {
     bones: {
-      leftUpperArm: { x: -50, y: 0, z: 50 },
-      rightUpperArm: { x: -50, y: 0, z: -50 },
+      leftUpperArm: { x: 50, y: 0, z: 30 },
+      rightUpperArm: { x: 50, y: 0, z: -30 },
+      leftLowerArm: { x: 0, y: 70, z: 0 },
+      rightLowerArm: { x: 0, y: -70, z: 0 },
       head: { x: -15, y: 0, z: 0 },
       chest: { x: -8, y: 0, z: 0 },
     }
   },
   [EmoteType.ENTHUSIASTIC]: {
     bones: {
-      leftUpperArm: { x: -40, y: 0, z: 45 },
-      rightUpperArm: { x: -40, y: 0, z: -45 },
-      leftLowerArm: { x: -30, y: 0, z: 0 },
-      rightLowerArm: { x: -30, y: 0, z: 0 },
+      leftUpperArm: { x: 45, y: 0, z: 35 },
+      rightUpperArm: { x: 45, y: 0, z: -35 },
+      leftLowerArm: { x: 0, y: 65, z: 0 },
+      rightLowerArm: { x: 0, y: -65, z: 0 },
       head: { x: -10, y: 0, z: 0 },
     }
   },
   [EmoteType.PROUD]: {
     bones: {
       chest: { x: -15, y: 0, z: 0 },
-      leftUpperArm: { x: 0, y: 0, z: 20 },
-      rightUpperArm: { x: 0, y: 0, z: -20 },
+      leftUpperArm: { x: 15, y: 0, z: 70 },
+      rightUpperArm: { x: 15, y: 0, z: -70 },
+      leftLowerArm: { x: 0, y: 20, z: 0 },
+      rightLowerArm: { x: 0, y: -20, z: 0 },
       head: { x: -10, y: 0, z: 0 },
     }
   },
   [EmoteType.GRATEFUL]: {
     bones: {
-      leftUpperArm: { x: -30, y: 30, z: 30 },
-      rightUpperArm: { x: -30, y: -30, z: -30 },
-      leftLowerArm: { x: -85, y: 0, z: 0 },
-      rightLowerArm: { x: -85, y: 0, z: 0 },
+      leftUpperArm: { x: 50, y: 0, z: 25 },
+      rightUpperArm: { x: 50, y: 0, z: -25 },
+      leftLowerArm: { x: 0, y: 100, z: 0 },
+      rightLowerArm: { x: 0, y: -100, z: 0 },
       head: { x: 12, y: 0, z: 0 },
       chest: { x: 5, y: 0, z: 0 },
     }
   },
   [EmoteType.THANKFUL]: {
     bones: {
-      leftUpperArm: { x: -25, y: 25, z: 35 },
-      rightUpperArm: { x: -25, y: -25, z: -35 },
-      leftLowerArm: { x: -80, y: 0, z: 0 },
-      rightLowerArm: { x: -80, y: 0, z: 0 },
+      leftUpperArm: { x: 45, y: 0, z: 30 },
+      rightUpperArm: { x: 45, y: 0, z: -30 },
+      leftLowerArm: { x: 0, y: 95, z: 0 },
+      rightLowerArm: { x: 0, y: -95, z: 0 },
       head: { x: 15, y: 0, z: 0 },
     }
   },
   [EmoteType.LAUGHING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 20, y: 0, z: 60 },
+      rightUpperArm: { x: 20, y: 0, z: -60 },
+      leftLowerArm: { x: 0, y: 30, z: 0 },
+      rightLowerArm: { x: 0, y: -30, z: 0 },
       head: { x: -20, y: 0, z: 0 },
       chest: { x: 12, y: 0, z: 0 },
     }
   },
   [EmoteType.AMUSED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 5, y: -8, z: 5 },
     }
   },
   [EmoteType.PLAYFUL]: {
     bones: {
-      leftUpperArm: { x: -20, y: 0, z: 35 },
-      rightUpperArm: { x: -20, y: 0, z: -35 },
+      leftUpperArm: { x: 30, y: 0, z: 55 },
+      rightUpperArm: { x: 30, y: 0, z: -55 },
+      leftLowerArm: { x: 0, y: 40, z: 0 },
+      rightLowerArm: { x: 0, y: -40, z: 0 },
       head: { x: -5, y: 15, z: 8 },
     }
   },
   [EmoteType.RELIEVED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 35 },
-      rightUpperArm: { x: 0, y: 0, z: -35 },
+      leftUpperArm: { x: 15, y: 0, z: 72 },
+      rightUpperArm: { x: 15, y: 0, z: -72 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 18, y: 0, z: 0 },
       chest: { x: 8, y: 0, z: 0 },
     }
   },
   [EmoteType.HOPEFUL]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 20, y: 0, z: 60 },
+      rightUpperArm: { x: 20, y: 0, z: -60 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: -12, y: 10, z: 0 },
     }
   },
   [EmoteType.OPTIMISTIC]: {
     bones: {
-      leftUpperArm: { x: -15, y: 0, z: 30 },
-      rightUpperArm: { x: -15, y: 0, z: -30 },
+      leftUpperArm: { x: 25, y: 0, z: 58 },
+      rightUpperArm: { x: 25, y: 0, z: -58 },
+      leftLowerArm: { x: 0, y: 30, z: 0 },
+      rightLowerArm: { x: 0, y: -30, z: 0 },
       head: { x: -10, y: 5, z: 0 },
       chest: { x: -5, y: 0, z: 0 },
     }
   },
   [EmoteType.LOVING]: {
     bones: {
-      leftUpperArm: { x: -20, y: 20, z: 30 },
-      rightUpperArm: { x: -20, y: -20, z: -30 },
-      leftLowerArm: { x: -70, y: 0, z: 0 },
-      rightLowerArm: { x: -70, y: 0, z: 0 },
+      leftUpperArm: { x: 45, y: 0, z: 35 },
+      rightUpperArm: { x: 45, y: 0, z: -35 },
+      leftLowerArm: { x: 0, y: 85, z: 0 },
+      rightLowerArm: { x: 0, y: -85, z: 0 },
       head: { x: 10, y: 0, z: 5 },
       chest: { x: 3, y: 0, z: 0 },
     }
   },
   [EmoteType.WARM]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 20, y: 0, z: 62 },
+      rightUpperArm: { x: 20, y: 0, z: -62 },
+      leftLowerArm: { x: 0, y: 28, z: 0 },
+      rightLowerArm: { x: 0, y: -28, z: 0 },
       head: { x: 5, y: 5, z: 0 },
     }
   },
   [EmoteType.CONTENT]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 32 },
-      rightUpperArm: { x: 0, y: 0, z: -32 },
+      leftUpperArm: { x: 18, y: 0, z: 68 },
+      rightUpperArm: { x: 18, y: 0, z: -68 },
+      leftLowerArm: { x: 0, y: 22, z: 0 },
+      rightLowerArm: { x: 0, y: -22, z: 0 },
       head: { x: 8, y: 0, z: 0 },
       chest: { x: 3, y: 0, z: 0 },
     }
   },
   [EmoteType.SATISFIED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 5, y: 5, z: 0 },
       chest: { x: -3, y: 0, z: 0 },
     }
   },
   [EmoteType.VICTORY]: {
     bones: {
-      leftUpperArm: { x: -150, y: 0, z: 30 },
-      rightUpperArm: { x: -150, y: 0, z: -30 },
+      leftUpperArm: { x: 100, y: 0, z: -20 },
+      rightUpperArm: { x: 100, y: 0, z: 20 },
+      leftLowerArm: { x: 0, y: 20, z: 0 },
+      rightLowerArm: { x: 0, y: -20, z: 0 },
       head: { x: -15, y: 0, z: 0 },
       chest: { x: -10, y: 0, z: 0 },
     }
   },
   [EmoteType.TRIUMPHANT]: {
     bones: {
-      leftUpperArm: { x: -140, y: 10, z: 35 },
-      rightUpperArm: { x: -140, y: -10, z: -35 },
+      leftUpperArm: { x: 110, y: 0, z: -15 },
+      rightUpperArm: { x: 110, y: 0, z: 15 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: -20, y: 0, z: 0 },
       chest: { x: -12, y: 0, z: 0 },
     }
@@ -322,40 +363,46 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === AGREEMENT ===
   [EmoteType.AGREE]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 20, y: 0, z: 62 },
+      rightUpperArm: { x: 20, y: 0, z: -62 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 15, y: 0, z: 0 },
     }
   },
   [EmoteType.NODDING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 18, y: 0, z: 0 },
     }
   },
   [EmoteType.APPROVING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 20, y: 0, z: 62 },
+      rightUpperArm: { x: 20, y: 0, z: -62 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 10, y: 5, z: 0 },
     }
   },
   [EmoteType.SUPPORTIVE]: {
     bones: {
-      leftUpperArm: { x: -20, y: 0, z: 25 },
-      rightUpperArm: { x: -20, y: 0, z: -25 },
-      leftLowerArm: { x: -40, y: 0, z: 0 },
-      rightLowerArm: { x: -40, y: 0, z: 0 },
+      leftUpperArm: { x: 35, y: 0, z: 50 },
+      rightUpperArm: { x: 35, y: 0, z: -50 },
+      leftLowerArm: { x: 0, y: 55, z: 0 },
+      rightLowerArm: { x: 0, y: -55, z: 0 },
       head: { x: 8, y: 0, z: 0 },
     }
   },
   [EmoteType.ENCOURAGING]: {
     bones: {
-      leftUpperArm: { x: -30, y: 0, z: 22 },
-      rightUpperArm: { x: -30, y: 0, z: -22 },
-      leftLowerArm: { x: -50, y: 0, z: 0 },
-      rightLowerArm: { x: -50, y: 0, z: 0 },
+      leftUpperArm: { x: 40, y: 0, z: 45 },
+      rightUpperArm: { x: 40, y: 0, z: -45 },
+      leftLowerArm: { x: 0, y: 60, z: 0 },
+      rightLowerArm: { x: 0, y: -60, z: 0 },
       head: { x: -5, y: 0, z: 0 },
     }
   },
@@ -363,138 +410,167 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === THINKING/NEUTRAL ===
   [EmoteType.THINKING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: -60, y: -30, z: -20 },
-      rightLowerArm: { x: -115, y: 0, z: 0 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 70, y: 0, z: -30 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -110, z: 0 },
       head: { x: 8, y: -10, z: 0 },
     }
   },
   [EmoteType.PONDERING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: -55, y: -25, z: -25 },
-      rightLowerArm: { x: -110, y: 0, z: 0 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 65, y: 0, z: -35 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -105, z: 0 },
       head: { x: 12, y: -10, z: 0 },
     }
   },
   [EmoteType.CURIOUS]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 3, y: 18, z: 0 },
     }
   },
   [EmoteType.WONDERING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: -8, y: 12, z: 10 },
     }
   },
   [EmoteType.LISTENING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 0, y: 5, z: 0 },
       chest: { x: 5, y: 0, z: 0 },
     }
   },
   [EmoteType.ATTENTIVE]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 18, y: 0, z: 62 },
+      rightUpperArm: { x: 18, y: 0, z: -62 },
+      leftLowerArm: { x: 0, y: 22, z: 0 },
+      rightLowerArm: { x: 0, y: -22, z: 0 },
       head: { x: -3, y: 0, z: 0 },
       chest: { x: -3, y: 0, z: 0 },
     }
   },
   [EmoteType.EXPLAINING]: {
     bones: {
-      leftUpperArm: { x: -30, y: 0, z: 22 },
-      rightUpperArm: { x: -30, y: 0, z: -22 },
-      leftLowerArm: { x: -45, y: 0, z: 0 },
-      rightLowerArm: { x: -45, y: 0, z: 0 },
+      leftUpperArm: { x: 35, y: 0, z: 48 },
+      rightUpperArm: { x: 35, y: 0, z: -48 },
+      leftLowerArm: { x: 0, y: 55, z: 0 },
+      rightLowerArm: { x: 0, y: -55, z: 0 },
       head: { x: 0, y: 0, z: 0 },
     }
   },
   [EmoteType.TEACHING]: {
     bones: {
-      leftUpperArm: { x: -35, y: 0, z: 20 },
-      rightUpperArm: { x: -35, y: 0, z: -20 },
-      leftLowerArm: { x: -50, y: 0, z: 0 },
-      rightLowerArm: { x: -50, y: 0, z: 0 },
+      leftUpperArm: { x: 40, y: 0, z: 45 },
+      rightUpperArm: { x: 40, y: 0, z: -45 },
+      leftLowerArm: { x: 0, y: 60, z: 0 },
+      rightLowerArm: { x: 0, y: -60, z: 0 },
       head: { x: -5, y: 0, z: 0 },
     }
   },
   [EmoteType.CONTEMPLATING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 15, y: -5, z: 0 },
     }
   },
   [EmoteType.REFLECTING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 32 },
-      rightUpperArm: { x: 0, y: 0, z: -32 },
+      leftUpperArm: { x: 18, y: 0, z: 68 },
+      rightUpperArm: { x: 18, y: 0, z: -68 },
+      leftLowerArm: { x: 0, y: 22, z: 0 },
+      rightLowerArm: { x: 0, y: -22, z: 0 },
       head: { x: 18, y: -5, z: 0 },
       chest: { x: 5, y: 0, z: 0 },
     }
   },
   [EmoteType.OBSERVING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 0, y: 8, z: 0 },
     }
   },
   [EmoteType.ANALYZING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: -45, y: -15, z: -25 },
-      rightLowerArm: { x: -100, y: 0, z: 0 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 60, y: 0, z: -40 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -95, z: 0 },
       head: { x: 5, y: -5, z: 0 },
     }
   },
   [EmoteType.SERIOUS]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 3, y: 0, z: 0 },
     }
   },
   [EmoteType.FOCUSED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 18, y: 0, z: 62 },
+      rightUpperArm: { x: 18, y: 0, z: -62 },
+      leftLowerArm: { x: 0, y: 22, z: 0 },
+      rightLowerArm: { x: 0, y: -22, z: 0 },
       head: { x: -5, y: 0, z: 0 },
       chest: { x: -3, y: 0, z: 0 },
     }
   },
   [EmoteType.MYSTERIOUS]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 5, y: 12, z: 0 },
     }
   },
   [EmoteType.ENIGMATIC]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 32 },
-      rightUpperArm: { x: 0, y: 0, z: -32 },
+      leftUpperArm: { x: 18, y: 0, z: 68 },
+      rightUpperArm: { x: 18, y: 0, z: -68 },
+      leftLowerArm: { x: 0, y: 22, z: 0 },
+      rightLowerArm: { x: 0, y: -22, z: 0 },
       head: { x: 3, y: 15, z: 3 },
     }
   },
   [EmoteType.NEUTRAL]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 0, y: 0, z: 0 },
     }
   },
   [EmoteType.CALM]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 32 },
-      rightUpperArm: { x: 0, y: 0, z: -32 },
+      leftUpperArm: { x: 18, y: 0, z: 68 },
+      rightUpperArm: { x: 18, y: 0, z: -68 },
+      leftLowerArm: { x: 0, y: 22, z: 0 },
+      rightLowerArm: { x: 0, y: -22, z: 0 },
       head: { x: 5, y: 0, z: 0 },
       chest: { x: 3, y: 0, z: 0 },
     }
@@ -503,54 +579,66 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === NEGATIVE EMOTIONS ===
   [EmoteType.ANGRY]: {
     bones: {
-      leftUpperArm: { x: 0, y: 15, z: 25 },
-      rightUpperArm: { x: 0, y: -15, z: -25 },
+      leftUpperArm: { x: 25, y: 15, z: 55 },
+      rightUpperArm: { x: 25, y: -15, z: -55 },
+      leftLowerArm: { x: 0, y: 35, z: 0 },
+      rightLowerArm: { x: 0, y: -35, z: 0 },
       head: { x: 8, y: 0, z: 0 },
       chest: { x: -5, y: 0, z: 0 },
     }
   },
   [EmoteType.FURIOUS]: {
     bones: {
-      leftUpperArm: { x: -20, y: 20, z: 20 },
-      rightUpperArm: { x: -20, y: -20, z: -20 },
-      leftLowerArm: { x: -40, y: 0, z: 0 },
-      rightLowerArm: { x: -40, y: 0, z: 0 },
+      leftUpperArm: { x: 35, y: 20, z: 45 },
+      rightUpperArm: { x: 35, y: -20, z: -45 },
+      leftLowerArm: { x: 0, y: 55, z: 0 },
+      rightLowerArm: { x: 0, y: -55, z: 0 },
       head: { x: 5, y: 0, z: 0 },
       chest: { x: -8, y: 0, z: 0 },
     }
   },
   [EmoteType.IRRITATED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 10, z: 28 },
-      rightUpperArm: { x: 0, y: -10, z: -28 },
+      leftUpperArm: { x: 22, y: 10, z: 60 },
+      rightUpperArm: { x: 22, y: -10, z: -60 },
+      leftLowerArm: { x: 0, y: 28, z: 0 },
+      rightLowerArm: { x: 0, y: -28, z: 0 },
       head: { x: 0, y: 12, z: 0 },
     }
   },
   [EmoteType.ANNOYED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 32 },
-      rightUpperArm: { x: 0, y: 0, z: -32 },
+      leftUpperArm: { x: 18, y: 0, z: 68 },
+      rightUpperArm: { x: 18, y: 0, z: -68 },
+      leftLowerArm: { x: 0, y: 22, z: 0 },
+      rightLowerArm: { x: 0, y: -22, z: 0 },
       head: { x: 0, y: 20, z: 0 },
     }
   },
   [EmoteType.FRUSTRATED]: {
     bones: {
-      leftUpperArm: { x: -15, y: 15, z: 22 },
-      rightUpperArm: { x: -15, y: -15, z: -22 },
+      leftUpperArm: { x: 30, y: 15, z: 50 },
+      rightUpperArm: { x: 30, y: -15, z: -50 },
+      leftLowerArm: { x: 0, y: 45, z: 0 },
+      rightLowerArm: { x: 0, y: -45, z: 0 },
       head: { x: 10, y: 0, z: 0 },
     }
   },
   [EmoteType.DISAGREE]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 25 },
-      rightUpperArm: { x: 0, y: 0, z: -25 },
+      leftUpperArm: { x: 22, y: 0, z: 58 },
+      rightUpperArm: { x: 22, y: 0, z: -58 },
+      leftLowerArm: { x: 0, y: 28, z: 0 },
+      rightLowerArm: { x: 0, y: -28, z: 0 },
       head: { x: 0, y: 18, z: 0 },
     }
   },
   [EmoteType.DISAPPROVING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 20, y: 0, z: 62 },
+      rightUpperArm: { x: 20, y: 0, z: -62 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: -5, y: 15, z: 0 },
     }
   },
@@ -558,37 +646,47 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === SURPRISE ===
   [EmoteType.SHOCKED]: {
     bones: {
-      leftUpperArm: { x: -30, y: 20, z: 40 },
-      rightUpperArm: { x: -30, y: -20, z: -40 },
+      leftUpperArm: { x: 45, y: 20, z: 35 },
+      rightUpperArm: { x: 45, y: -20, z: -35 },
+      leftLowerArm: { x: 0, y: 50, z: 0 },
+      rightLowerArm: { x: 0, y: -50, z: 0 },
       head: { x: -12, y: 0, z: 0 },
     }
   },
   [EmoteType.SURPRISED]: {
     bones: {
-      leftUpperArm: { x: -25, y: 15, z: 38 },
-      rightUpperArm: { x: -25, y: -15, z: -38 },
+      leftUpperArm: { x: 40, y: 15, z: 40 },
+      rightUpperArm: { x: 40, y: -15, z: -40 },
+      leftLowerArm: { x: 0, y: 45, z: 0 },
+      rightLowerArm: { x: 0, y: -45, z: 0 },
       head: { x: -10, y: 0, z: 0 },
     }
   },
   [EmoteType.STARTLED]: {
     bones: {
-      leftUpperArm: { x: -35, y: 25, z: 45 },
-      rightUpperArm: { x: -35, y: -25, z: -45 },
+      leftUpperArm: { x: 50, y: 25, z: 30 },
+      rightUpperArm: { x: 50, y: -25, z: -30 },
+      leftLowerArm: { x: 0, y: 55, z: 0 },
+      rightLowerArm: { x: 0, y: -55, z: 0 },
       head: { x: -15, y: 0, z: 0 },
       chest: { x: -5, y: 0, z: 0 },
     }
   },
   [EmoteType.AMAZED]: {
     bones: {
-      leftUpperArm: { x: -40, y: 20, z: 50 },
-      rightUpperArm: { x: -40, y: -20, z: -50 },
+      leftUpperArm: { x: 55, y: 20, z: 25 },
+      rightUpperArm: { x: 55, y: -20, z: -25 },
+      leftLowerArm: { x: 0, y: 60, z: 0 },
+      rightLowerArm: { x: 0, y: -60, z: 0 },
       head: { x: -18, y: 0, z: 0 },
     }
   },
   [EmoteType.AWE]: {
     bones: {
-      leftUpperArm: { x: -35, y: 15, z: 45 },
-      rightUpperArm: { x: -35, y: -15, z: -45 },
+      leftUpperArm: { x: 50, y: 15, z: 30 },
+      rightUpperArm: { x: 50, y: -15, z: -30 },
+      leftLowerArm: { x: 0, y: 55, z: 0 },
+      rightLowerArm: { x: 0, y: -55, z: 0 },
       head: { x: -20, y: 5, z: 0 },
       chest: { x: -8, y: 0, z: 0 },
     }
@@ -597,46 +695,58 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === SAD ===
   [EmoteType.SAD]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 38 },
-      rightUpperArm: { x: 0, y: 0, z: -38 },
+      leftUpperArm: { x: 15, y: 0, z: 72 },
+      rightUpperArm: { x: 15, y: 0, z: -72 },
+      leftLowerArm: { x: 0, y: 20, z: 0 },
+      rightLowerArm: { x: 0, y: -20, z: 0 },
       head: { x: 22, y: 0, z: 0 },
       chest: { x: 15, y: 0, z: 0 },
     }
   },
   [EmoteType.MELANCHOLIC]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 40 },
-      rightUpperArm: { x: 0, y: 0, z: -40 },
+      leftUpperArm: { x: 12, y: 0, z: 75 },
+      rightUpperArm: { x: 12, y: 0, z: -75 },
+      leftLowerArm: { x: 0, y: 18, z: 0 },
+      rightLowerArm: { x: 0, y: -18, z: 0 },
       head: { x: 25, y: -5, z: 0 },
       chest: { x: 18, y: 0, z: 0 },
     }
   },
   [EmoteType.DISAPPOINTED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 35 },
-      rightUpperArm: { x: 0, y: 0, z: -35 },
+      leftUpperArm: { x: 15, y: 0, z: 70 },
+      rightUpperArm: { x: 15, y: 0, z: -70 },
+      leftLowerArm: { x: 0, y: 20, z: 0 },
+      rightLowerArm: { x: 0, y: -20, z: 0 },
       head: { x: 18, y: 12, z: 3 },
     }
   },
   [EmoteType.DEJECTED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 42 },
-      rightUpperArm: { x: 0, y: 0, z: -42 },
+      leftUpperArm: { x: 10, y: 0, z: 78 },
+      rightUpperArm: { x: 10, y: 0, z: -78 },
+      leftLowerArm: { x: 0, y: 15, z: 0 },
+      rightLowerArm: { x: 0, y: -15, z: 0 },
       head: { x: 28, y: 0, z: 0 },
       chest: { x: 20, y: 0, z: 0 },
     }
   },
   [EmoteType.NOSTALGIC]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 35 },
-      rightUpperArm: { x: 0, y: 0, z: -35 },
+      leftUpperArm: { x: 15, y: 0, z: 70 },
+      rightUpperArm: { x: 15, y: 0, z: -70 },
+      leftLowerArm: { x: 0, y: 20, z: 0 },
+      rightLowerArm: { x: 0, y: -20, z: 0 },
       head: { x: 15, y: 10, z: 0 },
     }
   },
   [EmoteType.WISTFUL]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 33 },
-      rightUpperArm: { x: 0, y: 0, z: -33 },
+      leftUpperArm: { x: 16, y: 0, z: 68 },
+      rightUpperArm: { x: 16, y: 0, z: -68 },
+      leftLowerArm: { x: 0, y: 20, z: 0 },
+      rightLowerArm: { x: 0, y: -20, z: 0 },
       head: { x: 12, y: 15, z: 5 },
     }
   },
@@ -644,44 +754,55 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === DOUBT ===
   [EmoteType.SKEPTICAL]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 0, y: 15, z: 0 },
     }
   },
   [EmoteType.DOUBTFUL]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 5, y: 10, z: 10 },
     }
   },
   [EmoteType.SUSPICIOUS]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 28 },
-      rightUpperArm: { x: 0, y: 0, z: -28 },
+      leftUpperArm: { x: 18, y: 0, z: 62 },
+      rightUpperArm: { x: 18, y: 0, z: -62 },
+      leftLowerArm: { x: 0, y: 22, z: 0 },
+      rightLowerArm: { x: 0, y: -22, z: 0 },
       head: { x: 3, y: 12, z: 0 },
     }
   },
   [EmoteType.CONFUSED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: 0, y: 0, z: -30 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 20, y: 0, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 5, y: 22, z: 0 },
     }
   },
   [EmoteType.PUZZLED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 30 },
-      rightUpperArm: { x: -40, y: -15, z: -25 },
-      rightLowerArm: { x: -90, y: 0, z: 0 },
+      leftUpperArm: { x: 20, y: 0, z: 65 },
+      rightUpperArm: { x: 55, y: 0, z: -45 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -85, z: 0 },
       head: { x: 3, y: 18, z: 0 },
     }
   },
   [EmoteType.BEWILDERED]: {
     bones: {
-      leftUpperArm: { x: -15, y: 10, z: 38 },
-      rightUpperArm: { x: -15, y: -10, z: -38 },
+      leftUpperArm: { x: 30, y: 10, z: 50 },
+      rightUpperArm: { x: 30, y: -10, z: -50 },
+      leftLowerArm: { x: 0, y: 40, z: 0 },
+      rightLowerArm: { x: 0, y: -40, z: 0 },
       head: { x: -5, y: 25, z: 0 },
     }
   },
@@ -689,30 +810,38 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === FEAR ===
   [EmoteType.FEARFUL]: {
     bones: {
-      leftUpperArm: { x: -25, y: 25, z: 30 },
-      rightUpperArm: { x: -25, y: -25, z: -30 },
+      leftUpperArm: { x: 40, y: 25, z: 45 },
+      rightUpperArm: { x: 40, y: -25, z: -45 },
+      leftLowerArm: { x: 0, y: 50, z: 0 },
+      rightLowerArm: { x: 0, y: -50, z: 0 },
       head: { x: -8, y: 0, z: 0 },
       chest: { x: 8, y: 0, z: 0 },
     }
   },
   [EmoteType.ANXIOUS]: {
     bones: {
-      leftUpperArm: { x: -15, y: 15, z: 28 },
-      rightUpperArm: { x: -15, y: -15, z: -28 },
+      leftUpperArm: { x: 30, y: 15, z: 55 },
+      rightUpperArm: { x: 30, y: -15, z: -55 },
+      leftLowerArm: { x: 0, y: 40, z: 0 },
+      rightLowerArm: { x: 0, y: -40, z: 0 },
       head: { x: 5, y: 5, z: 0 },
     }
   },
   [EmoteType.WORRIED]: {
     bones: {
-      leftUpperArm: { x: -10, y: 10, z: 30 },
-      rightUpperArm: { x: -10, y: -10, z: -30 },
+      leftUpperArm: { x: 25, y: 10, z: 58 },
+      rightUpperArm: { x: 25, y: -10, z: -58 },
+      leftLowerArm: { x: 0, y: 35, z: 0 },
+      rightLowerArm: { x: 0, y: -35, z: 0 },
       head: { x: 8, y: 5, z: 0 },
     }
   },
   [EmoteType.NERVOUS]: {
     bones: {
-      leftUpperArm: { x: -8, y: 8, z: 30 },
-      rightUpperArm: { x: -8, y: -8, z: -30 },
+      leftUpperArm: { x: 22, y: 8, z: 60 },
+      rightUpperArm: { x: 22, y: -8, z: -60 },
+      leftLowerArm: { x: 0, y: 30, z: 0 },
+      rightLowerArm: { x: 0, y: -30, z: 0 },
       head: { x: 3, y: 8, z: 0 },
     }
   },
@@ -720,61 +849,77 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === PERSONALITY ===
   [EmoteType.ARROGANT]: {
     bones: {
-      leftUpperArm: { x: 0, y: 15, z: 28 },
-      rightUpperArm: { x: 0, y: -15, z: -28 },
+      leftUpperArm: { x: 20, y: 15, z: 62 },
+      rightUpperArm: { x: 20, y: -15, z: -62 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: -18, y: 15, z: 0 },
       chest: { x: -10, y: 0, z: 0 },
     }
   },
   [EmoteType.CONDESCENDING]: {
     bones: {
-      leftUpperArm: { x: 0, y: 10, z: 28 },
-      rightUpperArm: { x: 0, y: -10, z: -28 },
+      leftUpperArm: { x: 20, y: 10, z: 62 },
+      rightUpperArm: { x: 20, y: -10, z: -62 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: -15, y: 12, z: 0 },
     }
   },
   [EmoteType.SHY]: {
     bones: {
-      leftUpperArm: { x: 0, y: 15, z: 35 },
-      rightUpperArm: { x: 0, y: -15, z: -35 },
+      leftUpperArm: { x: 20, y: 15, z: 70 },
+      rightUpperArm: { x: 20, y: -15, z: -70 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 15, y: -10, z: 8 },
       chest: { x: 8, y: 0, z: 0 },
     }
   },
   [EmoteType.BASHFUL]: {
     bones: {
-      leftUpperArm: { x: 0, y: 20, z: 35 },
-      rightUpperArm: { x: 0, y: -20, z: -35 },
+      leftUpperArm: { x: 20, y: 20, z: 70 },
+      rightUpperArm: { x: 20, y: -20, z: -70 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: 18, y: -12, z: 10 },
     }
   },
   [EmoteType.CONFIDENT]: {
     bones: {
-      leftUpperArm: { x: 0, y: 15, z: 22 },
-      rightUpperArm: { x: 0, y: -15, z: -22 },
+      leftUpperArm: { x: 18, y: 15, z: 58 },
+      rightUpperArm: { x: 18, y: -15, z: -58 },
+      leftLowerArm: { x: 0, y: 22, z: 0 },
+      rightLowerArm: { x: 0, y: -22, z: 0 },
       head: { x: -8, y: 0, z: 0 },
       chest: { x: -8, y: 0, z: 0 },
     }
   },
   [EmoteType.ASSERTIVE]: {
     bones: {
-      leftUpperArm: { x: 0, y: 10, z: 24 },
-      rightUpperArm: { x: 0, y: -10, z: -24 },
+      leftUpperArm: { x: 20, y: 10, z: 60 },
+      rightUpperArm: { x: 20, y: -10, z: -60 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: -5, y: 0, z: 0 },
       chest: { x: -5, y: 0, z: 0 },
     }
   },
   [EmoteType.HUMBLE]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 35 },
-      rightUpperArm: { x: 0, y: 0, z: -35 },
+      leftUpperArm: { x: 15, y: 0, z: 70 },
+      rightUpperArm: { x: 15, y: 0, z: -70 },
+      leftLowerArm: { x: 0, y: 20, z: 0 },
+      rightLowerArm: { x: 0, y: -20, z: 0 },
       head: { x: 12, y: 0, z: 0 },
     }
   },
   [EmoteType.MODEST]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 33 },
-      rightUpperArm: { x: 0, y: 0, z: -33 },
+      leftUpperArm: { x: 16, y: 0, z: 68 },
+      rightUpperArm: { x: 16, y: 0, z: -68 },
+      leftLowerArm: { x: 0, y: 20, z: 0 },
+      rightLowerArm: { x: 0, y: -20, z: 0 },
       head: { x: 10, y: -5, z: 0 },
     }
   },
@@ -782,81 +927,99 @@ const EMOTE_LIBRARY: Record<EmoteType, PoseDefinition> = {
   // === SPECIAL ===
   [EmoteType.DRAMATIC]: {
     bones: {
-      leftUpperArm: { x: -60, y: 30, z: 50 },
-      rightUpperArm: { x: -20, y: 0, z: -28 },
+      leftUpperArm: { x: 70, y: 30, z: 25 },
+      rightUpperArm: { x: 20, y: 0, z: -62 },
+      leftLowerArm: { x: 0, y: 50, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: -15, y: 20, z: 0 },
       chest: { x: -10, y: 5, z: 0 },
     }
   },
   [EmoteType.THEATRICAL]: {
     bones: {
-      leftUpperArm: { x: -70, y: 25, z: 45 },
-      rightUpperArm: { x: -45, y: -25, z: -40 },
+      leftUpperArm: { x: 80, y: 25, z: 20 },
+      rightUpperArm: { x: 55, y: -25, z: -35 },
+      leftLowerArm: { x: 0, y: 55, z: 0 },
+      rightLowerArm: { x: 0, y: -50, z: 0 },
       head: { x: -20, y: 15, z: 0 },
       chest: { x: -8, y: 0, z: 5 },
     }
   },
   [EmoteType.PASSIONATE]: {
     bones: {
-      leftUpperArm: { x: -25, y: 20, z: 25 },
-      rightUpperArm: { x: -25, y: -20, z: -25 },
-      leftLowerArm: { x: -60, y: 0, z: 0 },
-      rightLowerArm: { x: -60, y: 0, z: 0 },
+      leftUpperArm: { x: 40, y: 20, z: 45 },
+      rightUpperArm: { x: 40, y: -20, z: -45 },
+      leftLowerArm: { x: 0, y: 70, z: 0 },
+      rightLowerArm: { x: 0, y: -70, z: 0 },
       head: { x: -5, y: 0, z: 0 },
       chest: { x: -5, y: 0, z: 0 },
     }
   },
   [EmoteType.INTENSE]: {
     bones: {
-      leftUpperArm: { x: -20, y: 15, z: 22 },
-      rightUpperArm: { x: -20, y: -15, z: -22 },
+      leftUpperArm: { x: 30, y: 15, z: 52 },
+      rightUpperArm: { x: 30, y: -15, z: -52 },
+      leftLowerArm: { x: 0, y: 40, z: 0 },
+      rightLowerArm: { x: 0, y: -40, z: 0 },
       head: { x: -8, y: 0, z: 0 },
       chest: { x: -8, y: 0, z: 0 },
     }
   },
   [EmoteType.BORED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 40 },
-      rightUpperArm: { x: 0, y: 0, z: -40 },
+      leftUpperArm: { x: 12, y: 0, z: 75 },
+      rightUpperArm: { x: 12, y: 0, z: -75 },
+      leftLowerArm: { x: 0, y: 18, z: 0 },
+      rightLowerArm: { x: 0, y: -18, z: 0 },
       head: { x: 15, y: 10, z: 0 },
       chest: { x: 8, y: 0, z: 0 },
     }
   },
   [EmoteType.TIRED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 42 },
-      rightUpperArm: { x: 0, y: 0, z: -42 },
+      leftUpperArm: { x: 10, y: 0, z: 78 },
+      rightUpperArm: { x: 10, y: 0, z: -78 },
+      leftLowerArm: { x: 0, y: 15, z: 0 },
+      rightLowerArm: { x: 0, y: -15, z: 0 },
       head: { x: 20, y: 0, z: 0 },
       chest: { x: 12, y: 0, z: 0 },
     }
   },
   [EmoteType.SLEEPY]: {
     bones: {
-      leftUpperArm: { x: 0, y: 0, z: 45 },
-      rightUpperArm: { x: 0, y: 0, z: -45 },
+      leftUpperArm: { x: 8, y: 0, z: 80 },
+      rightUpperArm: { x: 8, y: 0, z: -80 },
+      leftLowerArm: { x: 0, y: 12, z: 0 },
+      rightLowerArm: { x: 0, y: -12, z: 0 },
       head: { x: 25, y: -5, z: 0 },
       chest: { x: 15, y: 0, z: 0 },
     }
   },
   [EmoteType.DISGUSTED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 10, z: 30 },
-      rightUpperArm: { x: 0, y: -10, z: -30 },
+      leftUpperArm: { x: 20, y: 10, z: 65 },
+      rightUpperArm: { x: 20, y: -10, z: -65 },
+      leftLowerArm: { x: 0, y: 25, z: 0 },
+      rightLowerArm: { x: 0, y: -25, z: 0 },
       head: { x: -5, y: 15, z: -5 },
     }
   },
   [EmoteType.REPULSED]: {
     bones: {
-      leftUpperArm: { x: 0, y: 20, z: 35 },
-      rightUpperArm: { x: 0, y: -20, z: -35 },
+      leftUpperArm: { x: 22, y: 20, z: 62 },
+      rightUpperArm: { x: 22, y: -20, z: -62 },
+      leftLowerArm: { x: 0, y: 28, z: 0 },
+      rightLowerArm: { x: 0, y: -28, z: 0 },
       head: { x: -8, y: 18, z: -8 },
       chest: { x: 5, y: 0, z: 0 },
     }
   },
   [EmoteType.INSPIRED]: {
     bones: {
-      leftUpperArm: { x: -30, y: 10, z: 38 },
-      rightUpperArm: { x: -30, y: -10, z: -38 },
+      leftUpperArm: { x: 45, y: 10, z: 40 },
+      rightUpperArm: { x: 45, y: -10, z: -40 },
+      leftLowerArm: { x: 0, y: 55, z: 0 },
+      rightLowerArm: { x: 0, y: -55, z: 0 },
       head: { x: -15, y: 5, z: 0 },
       chest: { x: -8, y: 0, z: 0 },
     }
@@ -1067,7 +1230,7 @@ const VRMAvatarModel = ({
   return <Primitive object={vrm?.scene || gltf.scene} />;
 };
 
-// Auto Camera - Scale to fit with 80% coverage
+// Auto Camera - Scale to fit with full model visible
 const AutoCamera = ({ bounds }: { bounds: THREE.Box3 | null }) => {
   const { camera, controls } = useThree();
   const initialized = useRef(false);
@@ -1076,26 +1239,36 @@ const AutoCamera = ({ bounds }: { bounds: THREE.Box3 | null }) => {
     if (bounds && !initialized.current) {
       const boxSize = new THREE.Vector3();
       bounds.getSize(boxSize);
+      const boxCenter = new THREE.Vector3();
+      bounds.getCenter(boxCenter);
 
       const modelHeight = boxSize.y;
-      const headHeight = bounds.min.y + modelHeight * 0.85;
+      const modelWidth = boxSize.x;
 
-      // Calculate camera distance for proper framing
-      const visibleHeight = modelHeight * 0.5;
+      // Center of model (chest level for humanoid)
+      const centerY = boxCenter.y;
+
+      // Calculate camera distance to fit full model with padding
       const fov = (camera as THREE.PerspectiveCamera).fov;
       const fovRad = (fov * Math.PI) / 180;
-      const coverageRatio = 0.8;
-      const distance = (visibleHeight / 2) / Math.tan(fovRad / 2) / coverageRatio;
 
-      const cameraDistance = Math.max(distance, 0.8);
-      camera.position.set(0, headHeight, cameraDistance);
+      // Use the larger dimension to ensure model fits
+      const maxDimension = Math.max(modelHeight, modelWidth);
+      const paddingFactor = 1.2; // 20% padding around model
+      const distance = (maxDimension * paddingFactor) / (2 * Math.tan(fovRad / 2));
+
+      const cameraDistance = Math.max(distance, 1.5);
+
+      console.log('[AutoCamera] Model height:', modelHeight, 'Center Y:', centerY, 'Distance:', cameraDistance);
+
+      camera.position.set(0, centerY, cameraDistance);
 
       if (controls) {
-        (controls as any).target.set(0, headHeight - modelHeight * 0.1, 0);
+        (controls as any).target.set(0, centerY, 0);
         (controls as any).update();
       }
 
-      camera.lookAt(0, headHeight - modelHeight * 0.1, 0);
+      camera.lookAt(0, centerY, 0);
       initialized.current = true;
     }
   }, [bounds, camera, controls]);
@@ -1188,12 +1361,14 @@ const Avatar3D: React.FC<Avatar3DProps> = ({ vrmUrl, animationState, onModelLoad
         <AutoCamera bounds={bounds} />
         <Environment preset="city" />
         <OrbitControls
-          enablePan={false}
-          minPolarAngle={Math.PI / 3}
-          maxPolarAngle={Math.PI / 1.8}
+          enablePan={true}
+          panSpeed={0.5}
+          minPolarAngle={Math.PI / 6}
+          maxPolarAngle={Math.PI / 1.5}
           enableZoom={true}
-          minDistance={0.5}
-          maxDistance={4.0}
+          zoomSpeed={0.8}
+          minDistance={0.3}
+          maxDistance={15.0}
         />
       </Canvas>
 
